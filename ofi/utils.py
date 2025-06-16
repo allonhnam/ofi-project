@@ -1,12 +1,18 @@
 # ofi/utils.py
+from __future__ import annotations
+
 import pandas as pd
 from sklearn.decomposition import PCA
 
-def align_clock(df, freq="1s"):
-    """Outer-join resample, fill missing with zeros."""
-    return df.resample(freq).sum().fillna(0)
 
-def rolling_pca(mat: pd.DataFrame, window: int = 500) -> PCA:
-    pca = PCA(n_components=1)
-    pca.fit(mat.iloc[:window])
+def align_clock(series, freq="1s"):
+    """Convenience wrapper: outer-join resample + ffill zeros."""
+    return series.resample(freq).sum().fillna(0)
+
+
+def rolling_pca(mat: pd.DataFrame, *, window: int = 10_000) -> PCA:
+    """Fit a 1-factor PCA on the most-recent *window* rows."""
+    if len(mat) < window:
+        window = len(mat)
+    pca = PCA(n_components=1).fit(mat.iloc[-window:])
     return pca
