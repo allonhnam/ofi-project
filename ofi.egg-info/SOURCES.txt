@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+ofi/__init__.py
+ofi/aggregates.py
+ofi/events.py
+ofi/loader.py
+ofi/utils.py
+ofi.egg-info/PKG-INFO
+ofi.egg-info/SOURCES.txt
+ofi.egg-info/dependency_links.txt
+ofi.egg-info/requires.txt
+ofi.egg-info/top_level.txt

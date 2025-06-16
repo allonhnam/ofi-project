@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: ofi
+Version: 0.1.0
+Summary: Order-Flow Imbalance feature builders
+Author-email: Allon Nam <allonhnam@gatech.edu>
+Requires-Python: >=3.9
+Requires-Dist: pandas>=2.0
+Requires-Dist: numpy>=1.23
+Requires-Dist: scikit-learn>=1.3
+Requires-Dist: xarray>=2023
+Requires-Dist: matplotlib>=3.7
