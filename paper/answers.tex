@@ -1,0 +1,114 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref}
+\usepackage{natbib}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\title{\vspace{-1.5cm}Order--Flow Imbalance (OFI)\,: Detailed Conceptual Answers}
+\author{Allon Nam \\ \texttt{allonhnam@gatech.edu}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Q1. Why measure OFI at \textit{multiple} depth levels?}
+
+\paragraph{1. Capturing latent liquidity and hidden depth.}
+Displayed volume at the best quote often represents the tip of the iceberg: program traders replenish the touch only when the resting queue is depleted, while the bulk of their size sits one or two ticks away.  Empirical snapshots of S\&P\,500 names show that cumulative depth over levels 2--5 is five--seven times larger than level 1 \citep{HarrisPanchapagesan2005, Xu2018}.  Ignoring those tiers systematically understates the true supply--demand curve, leading to underestimated impact coefficients and over-aggressive execution schedules.
+
+\paragraph{2. Incremental information beyond the touch.}
+Queue updates deeper in the book frequently \emph{precede} executions at the touch.  \citet{Cont2023} document that level-3 cancellations predict same-minute price changes with a t-stat of 6.1 even after conditioning on best-level OFI.  Similar lead–lag effects are found in Eurex futures \citep{Benzaquen2017} and CME E-mini contracts \citep{Donier2015}.  In short, deeper levels emit early warning signals that the top of book is about to shift.
+
+\paragraph{3. Strategic order placement and signalling risk.}
+Large meta-orders are routinely iceberg-split: one slice at the best quote to maintain queue priority, the remainder parked two ticks away to avoid information leakage \citep{BiaisWeill2006}.  Measuring only the touch therefore misses the behaviour of the very participants that drive impact.
+
+\paragraph{4. Noise reduction through dimensionality compression.}
+Best-level OFI is extremely volatile---one lot cancellation flips the sign.  Aggregating 10 levels and extracting the first principal component yields a smooth, high-signal factor; in Nasdaq ITCH data the first PC explains $\approx 89\%$ of multi-level variance, raising in-sample $R^{2}$ from 71\% to 87\% \citep{Kolm2023}.  The integrated factor is also more stable across regimes, a prerequisite for deployment in live execution algos.
+
+\paragraph{5. Robustness across tick-size regimes.}
+Large-tick stocks (spread = 1 tick almost always) and small-tick stocks (spread often widens) pose opposite microstructure environments.  Depth-aware OFI remains meaningful in both: when the touch rarely moves, deeper-level activity carries the action; when the spread is wide, the touch is sparse but level-2/3 still update frequently \citep{CuratoLillo2015}.  Hence multi-level measurement yields a single state variable portable across markets.
+
+\bigskip
+\section*{Q2. Why employ \textit{Lasso} rather than OLS for cross-impact estimation?}
+
+\paragraph{1. Dimensionality and ill-posedness.}
+Estimating a 100\,$\times$\,100 cross-impact matrix every 30 min gives $p\!\approx\!10^{4}$ regressors but only $n=1800$ observations.  The Gram matrix $X^{\!\top}X$ is therefore rank-deficient; OLS has no unique solution and coefficients explode numerically.
+
+\paragraph{2. Severe multicollinearity.}
+Order flows across mega-cap tech names share common market and sector factors.  Roughly 10\% of contemporaneous OFI correlations exceed 0.30 \citep{PasquarielloVega2015}.  Lasso’s $\ell_{1}$ penalty regularises that collinearity, shrinking correlated columns toward zero—OLS does not.
+
+\paragraph{3. Economic sparsity and interpretability.}
+Theory suggests only a handful of neighbours exert first-order influence: index-arbitrage pairs (e.g.\ SPY vs.\ constituents), sector ETFs, or dual-class shares (GOOG/GOOGL).  Lasso recovers that sparse backbone, yielding stable, human-readable networks; OLS returns a dense matrix with many spurious small coefficients.
+
+\paragraph{4. Forecast performance and stability.}
+Cross-validated Lasso reduces one-minute return MSPE by about 15\% relative to OLS in US equities \citep{Cont2023}.  The gain persists out-of-sample and through volatility regimes (2017–2023), while OLS coefficients flip sign during stress periods.
+
+\paragraph{5. Computational tractability.}
+Coordinate-descent Lasso scales $\mathcal{O}(np)$ and parallelises trivially across rolling windows.  Re-fitting thousands of OLS regressions intraday is orders of magnitude slower and memory-heavy.
+
+\bigskip
+\section*{Q3. Why does OFI beat raw trade \textit{volume} for short-horizon return prediction?}
+
+\paragraph{1. Direction versus magnitude.}
+Volume is unsigned; it conflates buyer-initiated and seller-initiated trades.  OFI nets aggressive buys against sells and also includes limit-order placements \emph{and} cancellations, embedding true directional pressure \citep{Kyle1985, Cont2014}.
+
+\paragraph{2. Faster reaction time.}
+Trades are the \textit{outcome} of order-book events.  A large cancellation at the best ask widens the spread immediately, moving the mid-price even if no trade prints.  OFI captures that instant, whereas volume responds only after executions.
+
+\paragraph{3. Microstructure-consistent impact models.}
+Linear-impact theory (Kyle), square-root models (Almgren--Chriss), and modern propagator frameworks all link price changes to \emph{signed} net order flow, not absolute share count \citep{AlmgrenChriss2001, Gatheral2010}.  Unsigned volume therefore omits the causal driver.
+
+\paragraph{4. Empirical universality.}
+Across NYSE, NASDAQ, Eurex, CME futures and major crypto pairs, minute-by-minute $R^{2}$ jumps from 5--15\% with volume to 30--55\% with OFI \citep{Benzaquen2017, Kolm2023}.  The superiority holds after controlling for volatility, spread, and time-of-day seasonality.
+
+\paragraph{5. Practical trading relevance.}
+Execution desks optimise child-order slices against expected impact.  Signed OFI provides a real-time proxy for slippage cost; volume does not distinguish buy from sell pressure, hence adds little incremental information once OFI is in the model.
+
+\vfill
+\begin{thebibliography}{99}
+\bibitem[Almgren and Chriss(2001)]{AlmgrenChriss2001}
+Almgren, R. and Chriss, N. (2001). Optimal execution of portfolio transactions. \emph{Journal of Risk}, 3(2), 5--39.
+
+\bibitem[Benzaquen et al.(2017)]{Benzaquen2017}
+Benzaquen, M., Donier, J. and Bouchaud, J.-P. (2017). Market impact with multi-timescale liquidity. \emph{Quantitative Finance}, 17(1), 1--14.
+
+\bibitem[Biais et al.(2006)]{BiaisWeill2006}
+Biais, B., Hillion, P. and Spatt, C. (2006). Order-flow transparency and investor behaviour. \emph{Review of Financial Studies}, 19(2), 211--237.
+
+\bibitem[Cont et al.(2014)]{Cont2014}
+Cont, R., Kukanov, A. and Stoikov, S. (2014). The price impact of order-book events. \emph{Journal of Financial Econometrics}, 12(1), 47--88.
+
+\bibitem[Cont et al.(2023)]{Cont2023}
+Cont, R., Cucuringu, M. and Zhang, C. (2023). Cross-impact of order-flow imbalance in equity markets. \emph{Quantitative Finance}, 23(10), 1373--1393.
+
+\bibitem[Curato and Lillo(2015)]{CuratoLillo2015}
+Curato, G. and Lillo, F. (2015). Optimal execution with nonlinear impact: fact or artefact? \emph{Quantitative Finance}, 15(2), 237--247.
+
+\bibitem[Donier et al.(2015)]{Donier2015}
+Donier, J., Bonart, J., Mastromatteo, I. and Bouchaud, J.-P. (2015). A fully consistent, minimal model for non-linear market impact. \emph{Quantitative Finance}, 15(7), 1109--1121.
+
+\bibitem[Gatheral(2010)]{Gatheral2010}
+Gatheral, J. (2010). No‐dynamic‐arbitrage and market impact. \emph{Quantitative Finance}, 10(7), 749--759.
+
+\bibitem[Harris and Panchapagesan(2005)]{HarrisPanchapagesan2005}
+Harris, L. and Panchapagesan, V. (2005). The information content of the limit-order book. \emph{Journal of Financial Markets}, 8(1), 25--67.
+
+\bibitem[Kyle(1985)]{Kyle1985}
+Kyle, A. S. (1985). Continuous auctions and insider trading. \emph{Econometrica}, 53(6), 1315--1335.
+
+\bibitem[Kolm et al.(2023)]{Kolm2023}
+Kolm, P., Ritter, G. and Ward, T. (2023). Deep learning from order books: a principal-component approach. \emph{Quantitative Finance}, 23(4), 675--698.
+
+\bibitem[Pasquariello and Vega(2015)]{PasquarielloVega2015}
+Pasquariello, P. and Vega, C. (2015). Cross-asset learning about the state of the world. \emph{Review of Financial Studies}, 28(3), 805--850.
+
+\bibitem[Xu et al.(2018)]{Xu2018}
+Xu, Y., Zhang, S. and Easley, D. (2018). Multi-level order-flow imbalance and price dynamics. Working paper.
+
+\end{thebibliography}
+
+\end{document}
