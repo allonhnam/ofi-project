@@ -8,5 +8,6 @@ ofi/utils.py
 ofi.egg-info/PKG-INFO
 ofi.egg-info/SOURCES.txt
 ofi.egg-info/dependency_links.txt
+ofi.egg-info/entry_points.txt
 ofi.egg-info/requires.txt
 ofi.egg-info/top_level.txt

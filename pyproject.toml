@@ -19,3 +19,7 @@ dependencies = [
 [tool.setuptools.packages.find]
 include = ["ofi*"]          # <— ONLY package the 'ofi' directory
 exclude = ["data*", "notebooks*", "paper*"]
+
+[project.scripts]
+ofi-build-single = "scripts.build_single_stock_ofi:main"
+ofi-build-cross  = "scripts.build_cross_asset_ofi:main"

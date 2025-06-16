@@ -1,0 +1,3 @@
+[console_scripts]
+ofi-build-cross = scripts.build_cross_asset_ofi:main
+ofi-build-single = scripts.build_single_stock_ofi:main
