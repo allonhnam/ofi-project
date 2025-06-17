@@ -13,9 +13,7 @@ feature families required in the assignment.
 ## 0  Quick setup
 
 ```bash
-# clone & enter
-git clone https://github.com/<your-org>/ofi-project.git
-cd ofi-project
+# clone
 
 # create and activate venv
 python -m venv .venv
