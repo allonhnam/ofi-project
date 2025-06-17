@@ -12,7 +12,7 @@ import pandas as pd
 
 
 @dataclass(slots=True)
-class OFIIncrement:  # ═════════════════════════════════════════════════ #
+class OFIIncrement:  
     timestamp: pd.Timestamp
     level: int
     side: str      # 'bid' or 'ask'
@@ -34,10 +34,10 @@ def compute_increments(book: pd.DataFrame) -> pd.DataFrame:
     # Shift one observation back within each (level, side) queue
     prev = (
         book
-        .groupby(["level", "side"], observed=True)   # ← add observed=True
+        .groupby(["level", "side"], observed=True)
         .shift(1)
 )
-    # price change flags ---------------------------------------------------- #
+    # price change flags #
     bid_mask = book["side"] == "bid"
     ask_mask = ~bid_mask
 

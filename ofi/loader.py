@@ -24,7 +24,6 @@ class Loader:
         if colmap:
             self.colmap.update({v: k for k, v in colmap.items()})  # reverse map
 
-    # ------------------------------------------------------------------ #
     def load_raw(self) -> pd.DataFrame:
         df = pd.read_csv(self.path)
         df.columns = [c.strip() for c in df.columns]           # trim spaces

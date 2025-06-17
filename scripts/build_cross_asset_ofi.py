@@ -60,12 +60,12 @@ def main(cfg):
     panel  = build_panel(cfg.dir, cfg.freq, colmap)
     cfg.out.parent.mkdir(parents=True, exist_ok=True)
     panel.to_netcdf(cfg.out)
-    print(f"✅ panel saved → {cfg.out}")
+    print(f" panel saved → {cfg.out}")
 
     if cfg.lasso:
         weights = estimate_cross_impact(panel)
         weights.to_netcdf(cfg.out.with_name("lasso_loadings.nc"))
-        print("✅ Lasso loadings written")
+        print(" Lasso loadings written")
 
 
 if __name__ == "__main__":

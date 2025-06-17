@@ -46,7 +46,7 @@ def main(cfg):
     feats = pd.concat([ofi_best, ofi_int, ofi_vec], axis=1)
     cfg.out.parent.mkdir(parents=True, exist_ok=True)
     feats.to_parquet(cfg.out, compression="snappy")
-    print(f"✅ wrote {len(feats):,} rows → {cfg.out}")
+    print(f" wrote {len(feats):,} rows → {cfg.out}")
 
 
 if __name__ == "__main__":
