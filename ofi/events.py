@@ -32,8 +32,11 @@ def compute_increments(book: pd.DataFrame) -> pd.DataFrame:
     book = book.sort_values(["timestamp", "side", "level"]).copy()
 
     # Shift one observation back within each (level, side) queue
-    prev = book.groupby(["level", "side"]).shift(1)
-
+    prev = (
+        book
+        .groupby(["level", "side"], observed=True)   # ← add observed=True
+        .shift(1)
+)
     # price change flags ---------------------------------------------------- #
     bid_mask = book["side"] == "bid"
     ask_mask = ~bid_mask

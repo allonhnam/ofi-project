@@ -28,11 +28,11 @@ from sklearn.preprocessing import StandardScaler
 from ofi import Loader, compute_increments, best_level_ofi, cross_asset_panel
 
 
-def build_panel(csv_dir: Path, freq: str):
+def build_panel(csv_dir: Path, freq: str, colmap: dict[str, str]):
     series = {}
     for csv in csv_dir.glob("*.csv"):
         ticker = csv.stem.upper().split("_")[0]  # e.g. AAPL_20240527.csv
-        snap = Loader(csv).load_raw()
+        snap = Loader(csv, colmap=colmap).load_raw()
         incr = compute_increments(snap)
         series[ticker] = best_level_ofi(incr, freq=freq)
     return cross_asset_panel(series)  # xarray DataArray
@@ -56,7 +56,8 @@ def estimate_cross_impact(panel: xr.DataArray, alpha_grid=None):
 
 
 def main(cfg):
-    panel = build_panel(cfg.dir, cfg.freq)
+    colmap = dict(item.split("=", 1) for item in cfg.colmap.split(",") if item)
+    panel  = build_panel(cfg.dir, cfg.freq, colmap)
     cfg.out.parent.mkdir(parents=True, exist_ok=True)
     panel.to_netcdf(cfg.out)
     print(f"✅ panel saved → {cfg.out}")
@@ -73,4 +74,6 @@ if __name__ == "__main__":
     pa.add_argument("--freq", default="30s", help="resample horizon")
     pa.add_argument("--out", type=Path, required=True, help="output NetCDF path")
     pa.add_argument("--lasso", action="store_true", help="fit cross-impact Lasso")
+    pa.add_argument("--colmap", default="",
+                help="comma-sep rename, e.g. timestamp=ts_event,level=depth")
     main(pa.parse_args())
